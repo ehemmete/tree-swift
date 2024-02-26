@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ehemmete/FilesystemTree",
       "state" : {
-        "revision" : "89952b4c73ed4d5fd5a1072a0d81ab8da1264b13",
-        "version" : "1.0.6"
+        "revision" : "519ab37fff78b2d8a955ba1440368181cbe45414",
+        "version" : "1.1.2"
       }
     },
     {

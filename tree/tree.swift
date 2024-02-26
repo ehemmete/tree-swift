@@ -11,6 +11,7 @@ import FileSystemTree
 
 @main
 struct Tree: AsyncParsableCommand {
+    var versionNumber = "1.0.0"
     static var configuration = CommandConfiguration(
     commandName: "tree",
     abstract: "Builds a tree of a directory's files and all subdirectores and files.  Can output in text, json, and html."
@@ -18,18 +19,29 @@ struct Tree: AsyncParsableCommand {
     @Flag(name: .shortAndLong, help: "Output JSON") var json = false
     @Flag(name: .shortAndLong, help: "Output HTML") var html = false
     @Flag(name: .shortAndLong, help: "Include hidden files") var showHiddenFiles = false
-    @Argument(help: "The full path to the directory that will be root level for the tree.") var rootDir: String
+    @Flag(help: "Print version number") var version = false
+    @Argument(help: "The full path to the directory that will be root level for the tree.") var rootDir: String?
     
     mutating func validate() throws {
+        if version {
+            print("tree version: \(versionNumber)")
+            Tree.exit(withError: nil)
+        }
         var isDir: ObjCBool = true
-        guard rootDir != "" && FileManager.default.fileExists(atPath: rootDir, isDirectory: &isDir) else {
+        guard rootDir != nil && rootDir != "" && FileManager.default.fileExists(atPath: rootDir!, isDirectory: &isDir) else {
             throw ValidationError("Please provide the path to the root directory.")
         }
     }
     
     mutating func run() async throws {
+//        if version {
+//            let appVersion = Bundle.main.infoDictionary?["BundleShortVersionString"] as? String
+//            print("tree version: \(versionNumber)")
+//            Tree.exit(withError: nil)
+//        }
+        
         let fileSystemTree = FileSystemTree()
-        let rootURL = URL(filePath: rootDir)
+        let rootURL = URL(filePath: rootDir!)
         var passedOutput: String
         if json {
             passedOutput = "json"
@@ -57,7 +69,8 @@ struct Tree: AsyncParsableCommand {
             print(displayOutput.0.joined(separator: "\n"))
 //            print("Directory Count: \(displayOutput.1), File Count: \(displayOutput.2)")
             print("""
-                ]}
+                ]},
+                {\"Directory Count\":\"\(displayOutput.1)\",\"File Count\":\"\(displayOutput.2)\"}
                 ]
                 """)
             
@@ -76,8 +89,8 @@ struct Tree: AsyncParsableCommand {
             )
             let entries = await fileSystemTree.getArray(sourceURL: rootURL, showHiddenFiles: showHiddenFiles)
             displayOutput = try fileSystemTree.getContentsHTML(entryArray: entries, parentFolderURL: rootURL, showHiddenFiles: showHiddenFiles)
+            print("<h3>Directory Count: \(displayOutput.1), File Count: \(displayOutput.2)</h3>")
             print(displayOutput.0.joined(separator: "\n"))
-            print("Directory Count: \(displayOutput.1), File Count: \(displayOutput.2)")
             print(
                 """
                 </body>
